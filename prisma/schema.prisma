@@ -1,0 +1,362 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+  LANDLORD
+  INTERNSHIP_PROVIDER
+  ADMIN
+}
+
+enum PropertyType {
+  HOSTEL
+  BEDSITTER
+  SINGLE_ROOM
+  APARTMENT
+  SHARED_APARTMENT
+  RENTAL_HOUSE
+}
+
+enum PropertyStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  OCCUPIED
+  COMING_SOON
+}
+
+enum InternshipCategory {
+  TECHNOLOGY
+  FINANCE
+  MARKETING
+  ENGINEERING
+  HEALTHCARE
+  EDUCATION
+  HOSPITALITY
+  AGRICULTURE
+  MEDIA
+  OTHER
+}
+
+enum WorkMode {
+  REMOTE
+  ONSITE
+  HYBRID
+}
+
+enum ListingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+  CLOSED
+}
+
+enum ServiceCategory {
+  RESEARCH_ASSISTANCE
+  DATA_ANALYSIS
+  CV_WRITING
+  PROPOSAL_WRITING
+  REPORT_FORMATTING
+  EDITING_PROOFREADING
+  PRESENTATION_DESIGN
+  ACADEMIC_CONSULTATION
+}
+
+enum OrderStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentPurpose {
+  LANDLORD_SUBSCRIPTION
+  LISTING_FEE
+  FEATURED_LISTING
+  INTERNSHIP_POSTING
+  ACADEMIC_SERVICE
+  PREMIUM_UPGRADE
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String?
+  name          String
+  phone         String?
+  phoneVerified Boolean   @default(false)
+  image         String?
+  role          UserRole  @default(STUDENT)
+  verified      Boolean   @default(false)
+  companyName   String?
+  companyLogo   String?
+  companyBio    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  properties            Property[]
+  favorites             Favorite[]
+  internships           Internship[]
+  applications          InternshipApplication[]
+  serviceOrders         ServiceOrder[]          @relation("StudentOrders")
+  providerOrders        ServiceOrder[]          @relation("ProviderOrders")
+  payments              Payment[]
+  subscriptions         Subscription[]
+  inquiries             Inquiry[]
+  passwordResetTokens   PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model University {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  city      String
+  slug      String     @unique
+  createdAt DateTime   @default(now())
+  properties Property[]
+}
+
+model Property {
+  id              String             @id @default(cuid())
+  title           String
+  slug            String             @unique
+  propertyType    PropertyType
+  description     String
+  location        String
+  latitude        Float?
+  longitude       Float?
+  monthlyRent     Int
+  depositAmount   Int                @default(0)
+  furnished       Boolean            @default(false)
+  genderSpecific  String?
+  amenities       String
+  availability    AvailabilityStatus @default(AVAILABLE)
+  status          PropertyStatus     @default(PENDING)
+  featured        Boolean            @default(false)
+  verified        Boolean            @default(false)
+  contactPhone    String
+  whatsappNumber  String?
+  views           Int                @default(0)
+  universityId    String?
+  university      University?        @relation(fields: [universityId], references: [id])
+  landlordId      String?
+  landlord        User?              @relation(fields: [landlordId], references: [id])
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  images    PropertyImage[]
+  favorites Favorite[]
+  inquiries Inquiry[]
+}
+
+model PropertyImage {
+  id         String   @id @default(cuid())
+  url        String
+  alt        String?
+  order      Int      @default(0)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId])
+}
+
+model Inquiry {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  phone      String
+  message    String
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model Internship {
+  id                    String             @id @default(cuid())
+  title                 String
+  slug                  String             @unique
+  companyName           String
+  companyLogo           String?
+  location              String
+  category              InternshipCategory
+  duration              String
+  requirements          String
+  description           String
+  applicationDeadline   DateTime
+  applicationInstructions String
+  stipend               String?
+  paid                  Boolean            @default(false)
+  workMode              WorkMode           @default(ONSITE)
+  contactEmail          String?
+  contactPhone          String?
+  status                ListingStatus      @default(PENDING)
+  featured              Boolean            @default(false)
+  views                 Int                @default(0)
+  providerId            String
+  provider              User               @relation(fields: [providerId], references: [id])
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  applications InternshipApplication[]
+}
+
+model InternshipApplication {
+  id           String     @id @default(cuid())
+  coverLetter  String
+  resumeUrl    String?
+  status       String     @default("PENDING")
+  internshipId String
+  internship   Internship @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      User       @relation(fields: [studentId], references: [id])
+  createdAt    DateTime   @default(now())
+
+  @@unique([internshipId, studentId])
+}
+
+model AcademicService {
+  id          String          @id @default(cuid())
+  title       String
+  slug        String          @unique
+  category    ServiceCategory
+  description String
+  priceFrom   Int
+  priceTo     Int?
+  deliveryDays Int            @default(3)
+  featured    Boolean         @default(false)
+  active      Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  orders ServiceOrder[]
+}
+
+model ServiceOrder {
+  id          String        @id @default(cuid())
+  title       String
+  description String
+  fileUrl     String?
+  budget      Int?
+  status      OrderStatus   @default(PENDING)
+  serviceId   String
+  service     AcademicService @relation(fields: [serviceId], references: [id])
+  studentId   String
+  student     User          @relation("StudentOrders", fields: [studentId], references: [id])
+  providerId  String?
+  provider    User?         @relation("ProviderOrders", fields: [providerId], references: [id])
+  paymentId   String?       @unique
+  payment     Payment?      @relation(fields: [paymentId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model SubscriptionPlan {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  price       Int
+  durationDays Int
+  maxListings Int      @default(5)
+  featuredSlots Int    @default(0)
+  role        UserRole @default(LANDLORD)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  planId    String
+  plan      SubscriptionPlan @relation(fields: [planId], references: [id])
+  startsAt  DateTime         @default(now())
+  expiresAt DateTime
+  active    Boolean          @default(true)
+  createdAt DateTime         @default(now())
+}
+
+model Payment {
+  id            String         @id @default(cuid())
+  amount        Int
+  currency      String         @default("KES")
+  purpose       PaymentPurpose
+  status        PaymentStatus  @default(PENDING)
+  mpesaReceipt  String?
+  checkoutId    String?        @unique
+  phoneNumber   String?
+  metadata      String?
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  serviceOrder ServiceOrder?
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  role      String
+  content   String
+  rating    Int      @default(5)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model SiteStat {
+  id    String @id @default(cuid())
+  key   String @unique
+  value Int
+  label String
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
