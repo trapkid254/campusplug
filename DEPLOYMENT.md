@@ -30,6 +30,13 @@
 
 4. **Database** — set `DATABASE_URL` to your Postgres connection string (must start with `postgresql://`). Migrations run automatically on build via `prisma migrate deploy`.
 
+### Preventing build-time Prisma errors
+
+- This repo includes a build-time validator that runs before `next build` to ensure the Prisma `provider` in `prisma/schema.prisma` matches the `DATABASE_URL` protocol. The script is executed as the `prebuild` npm script and will fail the build with a clear message if there is a mismatch.
+- On Vercel, ensure `DATABASE_URL` in Project Settings points to your Postgres database (starts with `postgresql://`) if your `prisma/schema.prisma` provider is `postgresql`. Do NOT set a Postgres URL when your provider is `sqlite`.
+
+If you need help switching providers (sqlite for local dev, Postgres for production), I can add a short workflow or migration notes.
+
 5. **Seed production** (optional, once):
    ```bash
    DATABASE_URL="postgresql://..." npm run db:seed
