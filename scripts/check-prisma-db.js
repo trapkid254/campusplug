@@ -19,6 +19,7 @@ if (!providerMatch) {
 
 const provider = providerMatch[1].toLowerCase();
 const dbUrl = process.env.DATABASE_URL || '';
+const isCI = !!(process.env.VERCEL || process.env.CI || process.env.NODE_ENV === 'production');
 
 if (!dbUrl) {
   console.warn('Warning: DATABASE_URL is not set. Make sure your deployment provides a DATABASE_URL.');
@@ -36,6 +37,14 @@ if (provider === 'sqlite') {
 } else if (provider === 'postgresql' || provider === 'postgres') {
   if (!startsWithAny(dbUrl, ['postgresql://', 'postgres://'])) {
     exitWith('\nPrisma provider is set to "postgresql" but DATABASE_URL does not look like a Postgres URL.\nSet DATABASE_URL to your Postgres connection string in the Vercel project settings.\n');
+  }
+
+  // Extra sanity checks for CI/prod builds to catch common mistakes that lead to P1001
+  if (isCI) {
+    const lower = dbUrl.toLowerCase();
+    if (lower.includes('host:5432') || lower.includes('database') || lower.includes('localhost') || lower.includes('127.0.0.1')) {
+      exitWith('\nDetected an invalid or placeholder Postgres host in DATABASE_URL during a production/CI build.\nCommon causes: you left the example `host:5432`, used `localhost` in a cloud build, or forgot to set the real DATABASE_URL in your Vercel project settings.\n\nFix: In Vercel Project Settings -> Environment Variables set `DATABASE_URL` to a valid Postgres URL (starts with `postgresql://`) pointing to a cloud Postgres (Neon, Supabase, Vercel Postgres, or other). Do NOT use `localhost` or `host` for a remote build.\n');
+    }
   }
 } else {
   // generic check for supported protocols
