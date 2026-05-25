@@ -28,9 +28,10 @@
 | `CLOUDINARY_API_SECRET` | From Cloudinary dashboard |
 | `MPESA_*` | Safaricom Daraja credentials |
 
-4. **Database setup** — run locally against production DB once:
+4. **Database** — set `DATABASE_URL` to your Postgres connection string (must start with `postgresql://`). Migrations run automatically on build via `prisma migrate deploy`.
+
+5. **Seed production** (optional, once):
    ```bash
-   DATABASE_URL="postgresql://..." npx prisma db push
    DATABASE_URL="postgresql://..." npm run db:seed
    ```
 
@@ -54,13 +55,7 @@
    # Edit .env — set AUTH_SECRET, NEXTAUTH_URL, SMTP, etc.
    ```
 
-2. **Update `prisma/schema.prisma`** for PostgreSQL:
-   ```prisma
-   datasource db {
-     provider = "postgresql"
-     url      = env("DATABASE_URL")
-   }
-   ```
+2. **Set `DATABASE_URL`** in `.env` to the Docker Postgres URL (see `.env.example`).
 
 3. **Build and start**
    ```bash
@@ -69,7 +64,7 @@
 
 4. **Initialize database** (first time only)
    ```bash
-   docker compose exec app npx prisma db push
+   docker compose exec app npx prisma migrate deploy
    docker compose exec app npm run db:seed
    ```
 
@@ -88,10 +83,9 @@
 ```bash
 npm install
 cp .env.example .env
-# Configure .env with PostgreSQL DATABASE_URL
+# DATABASE_URL must be postgresql://...
 
-# Update prisma/schema.prisma to postgresql
-npx prisma db push
+npm run db:migrate
 npm run db:seed
 npm run build
 npm start

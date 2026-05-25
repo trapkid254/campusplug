@@ -43,7 +43,7 @@
 
 - **Frontend:** Next.js 15, React 19, Tailwind CSS 4
 - **Backend:** Next.js API Routes, Prisma ORM
-- **Database:** SQLite (dev) — switch to PostgreSQL for production
+- **Database:** PostgreSQL (Neon, Supabase, Docker, or Vercel Postgres)
 - **Auth:** NextAuth.js v5 (credentials)
 - **Payments:** M-Pesa Daraja API (stub included)
 
@@ -59,16 +59,21 @@
 # Install dependencies
 npm install
 
+# Start PostgreSQL (Docker)
+docker compose up db -d
+
 # Set up environment
 cp .env.example .env
 
-# Create database & seed demo data
-npm run db:push
+# Run migrations & seed demo data
+npm run db:migrate
 npm run db:seed
 
 # Start development server
 npm run dev
 ```
+
+> **Deploying?** Set `DATABASE_URL` to a `postgresql://...` connection string in your hosting dashboard. The build runs `prisma migrate deploy` automatically.
 
 Open [http://localhost:3000](http://localhost:3000)
 
