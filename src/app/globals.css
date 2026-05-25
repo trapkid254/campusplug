@@ -5,6 +5,12 @@
   --foreground: #0f172a;
 }
 
+/* Dark mode variables (applied when document.documentElement has class `dark`) */
+.dark {
+  --background: #0b1220;
+  --foreground: #e6eef8;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

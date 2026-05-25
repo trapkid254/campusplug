@@ -17,6 +17,7 @@ import {
 import { siteConfig } from "@/lib/config";
 import { getDashboardPath } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -72,6 +73,7 @@ export function Navbar() {
                 <LogOut className="h-4 w-4" />
                 Sign Out
               </Button>
+              <ThemeToggle />
             </>
           ) : (
             <>
@@ -83,6 +85,7 @@ export function Navbar() {
               <Link href="/register">
                 <Button size="sm">Get Started</Button>
               </Link>
+              <ThemeToggle />
             </>
           )}
         </div>
@@ -143,6 +146,9 @@ export function Navbar() {
               <Link href="/register" onClick={() => setOpen(false)}>
                 <Button className="w-full">Get Started</Button>
               </Link>
+                <div className="pt-2">
+                  <ThemeToggle />
+                </div>
             </div>
           )}
         </div>
